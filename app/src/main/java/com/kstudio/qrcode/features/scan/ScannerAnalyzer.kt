@@ -1,6 +1,5 @@
 package com.kstudio.qrcode.features.scan
 
-import android.util.Log
 import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
@@ -25,12 +24,11 @@ class ScannerAnalyzer(
 
                     displayValue?.let {
                         onResult.invoke(ScanImageState.Success(it))
-                    }?: onResult.invoke(ScanImageState.Fail("fail"))
+                    } ?: onResult.invoke(ScanImageState.Fail("fail"))
                 }
             }
             .addOnCompleteListener {
                 imageProxy.close() // Ensure images are closed
             }
-
     }
 }
