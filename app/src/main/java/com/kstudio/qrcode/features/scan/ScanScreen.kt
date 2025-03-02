@@ -34,6 +34,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,7 +55,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -70,12 +71,13 @@ import com.kstudio.qrcode.ui.component.bottomsheet.LinkDetailBottomSheet
 import com.kstudio.qrcode.ui.component.bottomsheet.model.BottomSheetData
 import com.kstudio.qrcode.ui.component.button.buttonColors
 import com.kstudio.qrcode.ui.theme.QrCodeTheme
+import org.koin.androidx.compose.koinViewModel
 import java.util.concurrent.Executor
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ScanScreen(
-    viewModel: CameraPreviewViewModel = viewModel(),
+    viewModel: CameraPreviewViewModel = koinViewModel(),
 ) {
     val context = LocalContext.current
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
@@ -83,6 +85,7 @@ fun ScanScreen(
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val debouncedUiState by remember { derivedStateOf { uiState } }
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             viewModel.onImagePicked(uri)
@@ -93,13 +96,14 @@ fun ScanScreen(
                 CameraScreen(
                     paddingValues = paddingValues,
                     hasPermission = cameraPermissionState.status.isGranted,
-                    uiState = uiState,
+                    uiState = debouncedUiState,
                     launcherGallery = launcher
                 ) {
                     cameraPermissionState.launchPermissionRequest()
                 }
                 val state = uiState
                 if (state is UiState.DisplayBottomSheet) {
+                    viewModel.saveScanHistory(state.data)
                     LinkDetailBottomSheet(
                         scope = scope,
                         onClose = {
@@ -181,7 +185,7 @@ fun NoPermissionScreen(
 fun CameraPreview(
     paddingValues: PaddingValues,
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
-    viewModel: CameraPreviewViewModel = viewModel(),
+    viewModel: CameraPreviewViewModel = koinViewModel(),
     uiState: UiState,
     launcherGallery: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>
 ) {
@@ -196,15 +200,23 @@ fun CameraPreview(
             setEnabledUseCases(CameraController.IMAGE_ANALYSIS)
             setImageAnalysisAnalyzer(
                 executor,
-                ScannerAnalyzer(scanner, latestOnResult) // Ensures image is closed
+                ScannerAnalyzer(scanner, latestOnResult)
             )
         }
     }
 
-    bindCameraController(cameraController, lifecycleOwner)
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            UiState.Analysis,
+            is UiState.AnalysisGalleryImage -> {
+                bindCameraController(cameraController, lifecycleOwner)
+            }
 
-    if (uiState !is UiState.Analysis) {
-        scanner.close()
+            is UiState.DisplayBottomSheet -> {
+                scanner.close()
+                cameraController.unbind()
+            }
+        }
     }
 
     Box(Modifier) {
@@ -324,16 +336,6 @@ private fun BottomNavigation(
             )
         }
     }
-}
-
-@Composable
-fun OnSelectImage() {
-    var photoUri: Uri? by remember { mutableStateOf(null) }
-    val launcher =
-        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-            photoUri = uri
-        }
-
 }
 
 @Preview
