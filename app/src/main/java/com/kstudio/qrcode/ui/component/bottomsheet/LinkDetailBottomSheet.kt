@@ -1,5 +1,7 @@
 package com.kstudio.qrcode.ui.component.bottomsheet
 
+import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -29,6 +31,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -81,13 +84,17 @@ fun LinkDetailBottomSheet(
                 fontWeight = FontWeight.Normal
             )
             Spacer(modifier = Modifier.height(16.dp))
-            MenuButton(text = "Copy", icon = R.drawable.ic_copy) {
-                clipboardManager.setText(AnnotatedString(data.link))
-                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
-                    Toast.makeText(context, "Copy success !", Toast.LENGTH_SHORT).show()
-                }
-            }
-            MenuButton(text = "Share", icon = R.drawable.ic_share) {}
+            MenuButton(
+                text = "Copy",
+                icon = R.drawable.ic_copy,
+                onClick = copyQrData(clipboardManager, data, context)
+            )
+
+            MenuButton(
+                text = "Share",
+                icon = R.drawable.ic_share,
+                onClick = shareQrData(data, context)
+            )
             MenuButton(text = "Favorite", icon = R.drawable.ic_star) {}
             Spacer(Modifier.height(16.dp))
             Button({}, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
@@ -95,6 +102,32 @@ fun LinkDetailBottomSheet(
             }
         }
     }
+}
+
+@Composable
+private fun copyQrData(
+    clipboardManager: ClipboardManager,
+    data: BottomSheetData,
+    context: Context
+): () -> Unit = {
+    clipboardManager.setText(AnnotatedString(data.link))
+    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+        Toast.makeText(context, "Copy success !", Toast.LENGTH_SHORT).show()
+    }
+}
+
+@Composable
+private fun shareQrData(
+    data: BottomSheetData,
+    context: Context
+): () -> Unit = {
+    val sendIntent: Intent = Intent().apply {
+        action = Intent.ACTION_SEND
+        putExtra(Intent.EXTRA_TEXT, data.link)
+        type = "text/plain"
+    }
+    val shareIntent = Intent.createChooser(sendIntent, null)
+    context.startActivity(shareIntent)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

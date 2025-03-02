@@ -2,8 +2,13 @@ package com.kstudio.qrcode.features.scan
 
 import android.Manifest
 import android.content.Context
+import android.net.Uri
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
@@ -11,7 +16,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -57,7 +61,10 @@ import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.common.InputImage
+import com.kstudio.qrcode.LocalNavController
 import com.kstudio.qrcode.R
+import com.kstudio.qrcode.Screen
 import com.kstudio.qrcode.features.scan.model.ScanImageState
 import com.kstudio.qrcode.ui.component.bottomsheet.LinkDetailBottomSheet
 import com.kstudio.qrcode.ui.component.bottomsheet.model.BottomSheetData
@@ -68,21 +75,26 @@ import java.util.concurrent.Executor
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ScanScreen(
-    viewModel: CameraPreviewViewModel = viewModel()
+    viewModel: CameraPreviewViewModel = viewModel(),
 ) {
+    val context = LocalContext.current
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            viewModel.onImagePicked(uri)
+        }
     QrCodeTheme {
         Scaffold { paddingValues ->
             Box {
                 CameraScreen(
                     paddingValues = paddingValues,
                     hasPermission = cameraPermissionState.status.isGranted,
-                    uiState = uiState
+                    uiState = uiState,
+                    launcherGallery = launcher
                 ) {
                     cameraPermissionState.launchPermissionRequest()
                 }
@@ -98,6 +110,17 @@ fun ScanScreen(
                         data = BottomSheetData(state.data)
                     )
                 }
+                if (state is UiState.AnalysisGalleryImage) {
+                    val inputImage = state.url?.let { it1 -> InputImage.fromFilePath(context, it1) }
+                    val scanner = BarcodeScanning.getClient()
+                    if (inputImage != null) {
+                        scanner.process(inputImage)
+                            .addOnSuccessListener { barcodes ->
+                                val result = barcodes.firstOrNull()?.rawValue ?: "No barcode found"
+                                viewModel.onResultScanAnalyzer(ScanImageState.Success(result))
+                            }
+                    }
+                }
             }
         }
     }
@@ -108,17 +131,26 @@ private fun CameraScreen(
     paddingValues: PaddingValues,
     hasPermission: Boolean,
     uiState: UiState,
+    launcherGallery: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>,
     onRequirePermission: () -> Unit,
 ) {
     if (hasPermission) {
-        CameraPreview(paddingValues = paddingValues, uiState = uiState)
+        CameraPreview(
+            paddingValues = paddingValues,
+            uiState = uiState,
+            launcherGallery = launcherGallery
+        )
     } else {
-        NoPermissionScreen(paddingValues, onRequirePermission)
+        NoPermissionScreen(paddingValues, launcherGallery, onRequirePermission)
     }
 }
 
 @Composable
-fun NoPermissionScreen(paddingValues: PaddingValues, onRequirePermission: () -> Unit) {
+fun NoPermissionScreen(
+    paddingValues: PaddingValues,
+    launcherGallery: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>,
+    onRequirePermission: () -> Unit
+) {
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -138,7 +170,9 @@ fun NoPermissionScreen(paddingValues: PaddingValues, onRequirePermission: () -> 
                     Text("Grant Permission")
                 }
             }
-            BottomNavigation(paddingValues)
+            Surface(modifier = Modifier.align(Alignment.BottomCenter)) {
+                BottomNavigation(paddingValues, launcherGallery)
+            }
         }
     }
 }
@@ -148,7 +182,8 @@ fun CameraPreview(
     paddingValues: PaddingValues,
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
     viewModel: CameraPreviewViewModel = viewModel(),
-    uiState: UiState
+    uiState: UiState,
+    launcherGallery: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>
 ) {
     val context = LocalContext.current
     val previewView: PreviewView = remember { PreviewView(context) }
@@ -165,8 +200,11 @@ fun CameraPreview(
             )
         }
     }
-    if (uiState is UiState.Analysis) {
-        bindCameraController(cameraController, lifecycleOwner)
+
+    bindCameraController(cameraController, lifecycleOwner)
+
+    if (uiState !is UiState.Analysis) {
+        scanner.close()
     }
 
     Box(Modifier) {
@@ -184,7 +222,13 @@ fun CameraPreview(
             },
         )
         TopOptionSection(paddingValues)
-        BottomNavigation(paddingValues)
+        Box(
+            modifier = Modifier
+                .background(Color.Transparent)
+                .align(Alignment.BottomCenter)
+        ) {
+            BottomNavigation(paddingValues, launcherGallery)
+        }
     }
 }
 
@@ -204,7 +248,7 @@ fun rememberScanner(): BarcodeScanner {
         .setBarcodeFormats(Barcode.FORMAT_QR_CODE, Barcode.FORMAT_AZTEC)
         .build()
 
-    return remember { BarcodeScanning.getClient(options) }
+    return BarcodeScanning.getClient(options)
 }
 
 fun bindCameraController(
@@ -241,17 +285,26 @@ private fun TopOptionSection(paddingValues: PaddingValues) {
 }
 
 @Composable
-private fun BoxScope.BottomNavigation(paddingValues: PaddingValues) {
+private fun BottomNavigation(
+    paddingValues: PaddingValues,
+    launcherGallery: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>
+) {
+    val navController = LocalNavController.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .align(Alignment.BottomCenter)
             .background(color = Color.Black.copy(alpha = .7f))
             .padding(top = 16.dp, bottom = 16.dp + paddingValues.calculateTopPadding()),
-        horizontalArrangement = Arrangement.SpaceAround
+        horizontalArrangement = Arrangement.SpaceAround,
     ) {
         FilledIconButton(
-            onClick = {},
+            onClick = {
+                launcherGallery.launch(
+                    PickVisualMediaRequest(
+                        mediaType = ActivityResultContracts.PickVisualMedia.ImageOnly
+                    )
+                )
+            },
             modifier = Modifier.size(60.dp),
             colors = buttonColors()
         ) {
@@ -261,7 +314,7 @@ private fun BoxScope.BottomNavigation(paddingValues: PaddingValues) {
             )
         }
         FilledIconButton(
-            onClick = {},
+            onClick = { navController?.navigate(Screen.Generate.name) },
             modifier = Modifier.size(60.dp),
             colors = buttonColors()
         ) {
@@ -273,11 +326,21 @@ private fun BoxScope.BottomNavigation(paddingValues: PaddingValues) {
     }
 }
 
+@Composable
+fun OnSelectImage() {
+    var photoUri: Uri? by remember { mutableStateOf(null) }
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            photoUri = uri
+        }
+
+}
+
 @Preview
 @Composable
 private fun CameraPreviewPreview() {
     QrCodeTheme {
-        CameraPreview(paddingValues = PaddingValues(16.dp), uiState = UiState.Analysis)
+//        CameraPreview(paddingValues = PaddingValues(16.dp), uiState = UiState.Analysis)
     }
 }
 
@@ -285,10 +348,10 @@ private fun CameraPreviewPreview() {
 @Composable
 private fun NoPermissionScreenPreview() {
     QrCodeTheme {
-        NoPermissionScreen(
-            paddingValues = PaddingValues(4.dp),
-            onRequirePermission = {}
-        )
+//        NoPermissionScreen(
+//            paddingValues = PaddingValues(4.dp),
+//            onRequirePermission = {}
+//        )
     }
 }
 
@@ -297,7 +360,7 @@ private fun NoPermissionScreenPreview() {
 private fun BottomAppBarPreview() {
     QrCodeTheme {
         Box {
-            BottomNavigation(PaddingValues(4.dp))
+//            BottomNavigation(PaddingValues(4.dp), launcherGallery)
         }
     }
 }
