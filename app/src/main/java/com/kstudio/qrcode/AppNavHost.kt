@@ -33,7 +33,13 @@ fun AppNavHost(
                     return@composable slideOutOfContainer(
                         AnimatedContentTransitionScope.SlideDirection.End, tween(700)
                     )
-                }) {
+                },
+                popEnterTransition = {
+                    return@composable slideIntoContainer(
+                        AnimatedContentTransitionScope.SlideDirection.End, tween(700)
+                    )
+                }
+            ) {
                 ScanScreen()
             }
             composable(NavigationItem.Generate.route,
