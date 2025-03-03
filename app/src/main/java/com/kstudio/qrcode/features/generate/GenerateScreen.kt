@@ -1,10 +1,193 @@
 package com.kstudio.qrcode.features.generate
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
+import android.widget.Toast
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.kstudio.qrcode.LocalNavController
+import com.kstudio.qrcode.R
+import com.kstudio.qrcode.ui.component.button.buttonColors
+import com.kstudio.qrcode.ui.theme.QrCodeTheme
+import org.koin.androidx.compose.koinViewModel
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
+@Composable
+fun GenerateScreen(
+    modifier: Modifier = Modifier,
+    viewModel: GenerateQrViewModel = koinViewModel()
+) {
+    val context = LocalContext.current
+    val navController = LocalNavController.current
+    val bitmapImage by viewModel.qrBitmap.collectAsStateWithLifecycle(null)
+    val storagePermissionState = rememberPermissionState(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+
+    SideEffect {
+        if (!storagePermissionState.status.isGranted) {
+            storagePermissionState.launchPermissionRequest()
+        }
+    }
+
+    QrCodeTheme {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        titleContentColor = MaterialTheme.colorScheme.tertiary,
+                    ),
+                    title = {
+                        Text("Generate QR Code")
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navController?.popBackStack() }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Localized description"
+                            )
+                        }
+                    }
+                )
+            },
+        ) { paddingValues ->
+            Column(
+                modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp, vertical = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                QrCode(bitmapImage)
+                Spacer(modifier = Modifier.height(24.dp))
+                OutlinedTextField(
+                    value = viewModel.textFieldLinkData,
+                    onValueChange = { text -> viewModel.onTextFieldChange(text) },
+                    label = { Text("Input link or data") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Button(
+                    onClick = { viewModel.onConfirmField() },
+                    modifier = Modifier.padding(top = 32.dp)
+                ) {
+                    Text("Confirm")
+                }
+                Row(modifier = Modifier.padding(top = 16.dp)) {
+                    IconButton(
+                        onClick = {
+                            viewModel.saveQrResult()
+                            viewModel.saveBitmapToGallery(context, bitmapImage)
+                            Toast.makeText(context, "Save Qr Success !!", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier
+                            .size(60.dp)
+                            .padding(),
+                        colors = buttonColors().copy(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.ic_save),
+                            contentDescription = "Save",
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    FilledIconButton(
+                        onClick = shareQrData(
+                            bitmapImage,
+                            context
+                        ),
+                        modifier = Modifier.size(60.dp),
+                        colors = buttonColors().copy(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.ic_share),
+                            contentDescription = "Share",
+                            colorFilter = ColorFilter.tint(color = colorResource(R.color.white))
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Composable
-fun GenerateScreen(modifier: Modifier = Modifier) {
-    Text("GenerateScreen")
+private fun QrCode(bitmapImage: Bitmap?) {
+    if (bitmapImage != null) {
+        Image(
+            bitmap = bitmapImage!!.asImageBitmap(),
+            "Qr result",
+            modifier = Modifier.clip(RoundedCornerShape(12.dp))
+        )
+    } else {
+        Spacer(
+            modifier = Modifier
+                .size(200.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.outline)
+        )
+    }
+}
+
+@Composable
+private fun shareQrData(
+    data: Bitmap?,
+    context: Context
+): () -> Unit = {
+    val sendIntent: Intent = Intent().apply {
+        action = Intent.ACTION_SEND
+        putExtra(Intent.EXTRA_STREAM, data)
+        type = "image/jpeg"
+    }
+    val shareIntent = Intent.createChooser(sendIntent, null)
+    context.startActivity(shareIntent)
+}
+
+
+@Preview
+@Composable
+private fun GenerateScreenPreview() {
+    QrCodeTheme {
+        GenerateScreen()
+    }
 }

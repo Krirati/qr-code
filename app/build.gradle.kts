@@ -75,11 +75,8 @@ dependencies {
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.compose)
     implementation(libs.androidx.camera.camera2)
-    // If you want to additionally use the CameraX Lifecycle library
     implementation(libs.androidx.camera.lifecycle)
-    // If you want to additionally add CameraX ML Kit Vision Integration
     implementation(libs.androidx.camera.mlkit.vision)
-    // If you want to additionally use the CameraX Extensions library
     implementation(libs.androidx.camera.extensions)
     implementation(libs.androidx.camera.view)
     implementation(libs.accompanist.permissions)
@@ -92,6 +89,8 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.koin.androidx.compose)
-    // Koin for Tests
     testImplementation(libs.koin.test.junit4)
+
+    implementation(libs.zxing.core)
+    implementation(libs.ui.graphics)
 }
