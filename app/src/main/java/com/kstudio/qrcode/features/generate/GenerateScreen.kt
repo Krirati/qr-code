@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -43,6 +44,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -52,6 +54,9 @@ import com.kstudio.qrcode.R
 import com.kstudio.qrcode.ui.component.button.buttonColors
 import com.kstudio.qrcode.ui.theme.QrCodeTheme
 import org.koin.androidx.compose.koinViewModel
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -111,7 +116,7 @@ fun GenerateScreen(
                     onClick = { viewModel.onConfirmField() },
                     modifier = Modifier.padding(top = 32.dp)
                 ) {
-                    Text("Confirm")
+                    Text("CONFIRM")
                 }
                 Row(modifier = Modifier.padding(top = 16.dp)) {
                     IconButton(
@@ -174,15 +179,37 @@ private fun shareQrData(
     data: Bitmap?,
     context: Context
 ): () -> Unit = {
-    val sendIntent: Intent = Intent().apply {
-        action = Intent.ACTION_SEND
-        putExtra(Intent.EXTRA_STREAM, data)
-        type = "image/jpeg"
+    data?.let {
+        val uri = saveBitmapToCache(context, data)
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "image/png"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(shareIntent, "Share QR Code"))
     }
-    val shareIntent = Intent.createChooser(sendIntent, null)
-    context.startActivity(shareIntent)
 }
 
+private fun saveBitmapToCache(context: Context, bitmap: Bitmap): Uri? {
+    return try {
+        val cachePath = File(context.cacheDir, "images")
+        cachePath.mkdirs()
+        val file = File(cachePath, "qrcode.png")
+        val stream = FileOutputStream(file)
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        stream.flush()
+        stream.close()
+
+        FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file
+        )
+    } catch (e: IOException) {
+        e.printStackTrace()
+        null
+    }
+}
 
 @Preview
 @Composable
