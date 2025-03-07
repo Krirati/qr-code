@@ -2,11 +2,12 @@ package com.kstudio.qrcode.di
 
 import android.app.Application
 import com.kstudio.qrcode.ScanDatabase
+import com.kstudio.qrcode.features.generate.GenerateQrViewModel
+import com.kstudio.qrcode.features.history.HistoryViewModel
 import com.kstudio.qrcode.features.history.data.ScanHistoryRepository
 import com.kstudio.qrcode.features.history.data.ScanHistoryRepositoryImpl
 import com.kstudio.qrcode.features.history.data.datasource.ScanHistoryDao
 import com.kstudio.qrcode.features.scan.CameraPreviewViewModel
-import com.kstudio.qrcode.features.generate.GenerateQrViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
@@ -20,4 +21,5 @@ val appModule = module {
     factory<ScanHistoryRepository> { ScanHistoryRepositoryImpl(get()) }
     viewModelOf(::CameraPreviewViewModel)
     viewModelOf(::GenerateQrViewModel)
+    viewModelOf(::HistoryViewModel)
 }

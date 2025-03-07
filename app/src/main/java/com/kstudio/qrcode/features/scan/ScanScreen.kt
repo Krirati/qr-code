@@ -38,6 +38,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -314,7 +315,7 @@ private fun BottomNavigation(
         modifier = Modifier
             .fillMaxWidth()
             .background(color = Color.Black.copy(alpha = .7f))
-            .padding(top = 16.dp, bottom = 16.dp + paddingValues.calculateTopPadding()),
+            .padding(top = 24.dp, bottom = 24.dp + paddingValues.calculateBottomPadding()),
         horizontalArrangement = Arrangement.SpaceAround,
     ) {
         FilledIconButton(
@@ -340,6 +341,16 @@ private fun BottomNavigation(
         ) {
             Image(
                 painter = painterResource(R.drawable.ic_qr_code),
+                contentDescription = "Generate Qr code"
+            )
+        }
+        FilledIconButton(
+            onClick = { navController?.navigate(Screen.History.name) },
+            modifier = Modifier.size(60.dp),
+            colors = buttonColors()
+        ) {
+            Image(
+                painter = painterResource(R.drawable.ic_list),
                 contentDescription = "Generate Qr code"
             )
         }

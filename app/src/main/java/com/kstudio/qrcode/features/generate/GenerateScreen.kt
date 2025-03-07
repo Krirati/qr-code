@@ -120,6 +120,7 @@ fun GenerateScreen(
                 }
                 Row(modifier = Modifier.padding(top = 16.dp)) {
                     IconButton(
+                        enabled = bitmapImage != null,
                         onClick = {
                             viewModel.saveQrResult()
                             viewModel.saveBitmapToGallery(context, bitmapImage)
@@ -141,6 +142,7 @@ fun GenerateScreen(
                             bitmapImage,
                             context
                         ),
+                        enabled = bitmapImage != null,
                         modifier = Modifier.size(60.dp),
                         colors = buttonColors().copy(containerColor = MaterialTheme.colorScheme.primaryContainer)
                     ) {
@@ -160,7 +162,7 @@ fun GenerateScreen(
 private fun QrCode(bitmapImage: Bitmap?) {
     if (bitmapImage != null) {
         Image(
-            bitmap = bitmapImage!!.asImageBitmap(),
+            bitmap = bitmapImage.asImageBitmap(),
             "Qr result",
             modifier = Modifier.clip(RoundedCornerShape(12.dp))
         )

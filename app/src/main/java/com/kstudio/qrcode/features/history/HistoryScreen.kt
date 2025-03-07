@@ -1,9 +1,193 @@
 package com.kstudio.qrcode.features.history
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.kstudio.qrcode.LocalNavController
+import com.kstudio.qrcode.R
+import com.kstudio.qrcode.di.appModule
+import com.kstudio.qrcode.features.history.model.HistoryData
+import com.kstudio.qrcode.features.history.model.HistoryUiState
+import com.kstudio.qrcode.ui.component.loading.Loading
+import com.kstudio.qrcode.ui.theme.QrCodeTheme
+import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.KoinApplication
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HistoryScreen(
+    viewModel: HistoryViewModel = koinViewModel()
+) {
+    val navController = LocalNavController.current
+    val historyUiState = viewModel.historyState.collectAsStateWithLifecycle()
+
+    Scaffold(topBar = {
+        TopAppBar(
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background,
+                titleContentColor = MaterialTheme.colorScheme.tertiary,
+            ),
+            title = {
+                Text("History of scan")
+            },
+            navigationIcon = {
+                IconButton(onClick = { navController?.popBackStack() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Localized description"
+                    )
+                }
+            }
+        )
+    }) { paddingValues ->
+        when (val state = historyUiState.value) {
+            HistoryUiState.Empty -> {
+                HistoryEmpty()
+            }
+
+            HistoryUiState.Loading -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Loading()
+                }
+            }
+
+            is HistoryUiState.Success -> {
+                HistoryListItem(paddingValues, state)
+            }
+        }
+
+    }
+}
 
 @Composable
-fun HistoryScreen() {
-    Text("HistoryScreen")
+private fun HistoryEmpty() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Image(
+            modifier = Modifier.size(120.dp),
+            painter = painterResource(R.drawable.box),
+            contentDescription = "Box icon",
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            "Don't has history of scan",
+            style = MaterialTheme.typography.titleLarge,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun HistoryListItem(
+    paddingValues: PaddingValues,
+    state: HistoryUiState.Success
+) {
+    LazyColumn(modifier = Modifier.padding(paddingValues)) {
+        items(state.data) { item ->
+            HistoryItem(data = item)
+        }
+    }
+}
+
+@Composable
+fun HistoryItem(modifier: Modifier = Modifier, data: HistoryData) {
+    Column(
+        modifier = Modifier
+            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+            .clip(RoundedCornerShape(12.dp)),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.White)
+                .padding(16.dp)
+
+        ) {
+            Text(data.title, style = MaterialTheme.typography.titleMedium.copy(Color.Black))
+            HorizontalDivider(
+                Modifier.padding(vertical = 12.dp),
+                color = MaterialTheme.colorScheme.outline
+            )
+            Text(
+                data.createDate.toString(),
+                style = MaterialTheme.typography.bodyMedium.copy(Color.LightGray)
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun HistoryEmptyPreview() {
+    QrCodeTheme {
+        HistoryEmpty()
+    }
+}
+
+
+@Preview
+@Composable
+private fun HistoryItemPreview() {
+    QrCodeTheme {
+        HistoryItem(data = HistoryData(id = 0, title = "test", createDate = "01/01/2025"))
+    }
+}
+
+
+@Preview
+@Composable
+private fun HistoryScreenPreview() {
+    KoinApplication(application = {
+        modules(appModule)
+    }) {
+        QrCodeTheme {
+            HistoryScreen()
+        }
+    }
 }

@@ -2,6 +2,7 @@ package com.kstudio.qrcode.ui.component.bottomsheet
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -97,11 +98,22 @@ fun LinkDetailBottomSheet(
             )
             MenuButton(text = "Favorite", icon = R.drawable.ic_star) {}
             Spacer(Modifier.height(16.dp))
-            Button({}, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+            Button({
+                openExternalLink(data, context)
+            }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
                 Text("OPEN LINK", Modifier.padding(vertical = 8.dp, horizontal = 16.dp))
             }
         }
     }
+}
+
+private fun openExternalLink(data: BottomSheetData, context: Context) {
+    val intent = Intent().apply {
+        setAction(Intent.ACTION_VIEW)
+        setData(Uri.parse(data.link))
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    context.startActivity(intent)
 }
 
 @Composable
