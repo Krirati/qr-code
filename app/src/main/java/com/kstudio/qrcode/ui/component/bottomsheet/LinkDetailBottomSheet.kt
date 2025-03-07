@@ -174,12 +174,6 @@ private fun MenuButton(text: String, icon: Int, onClick: () -> Unit) {
     }
 }
 
-@Composable
-fun copyToClipboard(textCopied: String) {
-    val clipboardManager = LocalClipboardManager.current
-
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable

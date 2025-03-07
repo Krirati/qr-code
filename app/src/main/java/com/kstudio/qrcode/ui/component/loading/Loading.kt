@@ -9,7 +9,7 @@ import androidx.compose.ui.unit.dp
 import com.kstudio.qrcode.ui.theme.QrCodeTheme
 
 @Composable
-fun Loading(modifier: Modifier = Modifier) {
+fun Loading() {
     CircularProgressIndicator(modifier = Modifier.size(60.dp))
 }
 

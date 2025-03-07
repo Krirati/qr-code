@@ -61,7 +61,7 @@ fun NavigationBar(
         fontSize = 12.sp
     ),
     onTabSelected: (selectedIndex: Int) -> Unit = {}
-): Unit {
+) {
     if (tabs.size !in 2..4) {
         throw IllegalArgumentException("NavigationBar must have between 2 and 4")
     }
@@ -105,7 +105,6 @@ fun NavigationBar(
         }
         Box(
             modifier = Modifier
-                // Position the selector dynamically based on the selected tab
                 .offset(x = animatedOffsetX, y = verticalOffset)
                 .clip(RoundedCornerShape(tabCornerRadius))
                 .width(boxWidth) // Updated box width
@@ -113,7 +112,7 @@ fun NavigationBar(
                 .background(tabColor)
         ) {
             Text(
-                text = tabs[selectedOption], // Use the selected option's text
+                text = tabs[selectedOption],
                 modifier = Modifier.align(Alignment.Center),
                 style = selectedTabTextStyle
             )

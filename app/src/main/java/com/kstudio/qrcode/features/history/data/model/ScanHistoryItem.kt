@@ -13,5 +13,5 @@ data class ScanHistoryItem(
     val createDateTime: LocalDateTime = LocalDateTime.now()
 ) {
     val createdDateFormatted: String
-        get() = createDateTime.format(DateTimeFormatter.ofPattern("dd MMM YYYY - HH:mm:ss a"))
+        get() = createDateTime.format(DateTimeFormatter.ofPattern("dd MMM yyyy - HH:mm:ss a"))
 }

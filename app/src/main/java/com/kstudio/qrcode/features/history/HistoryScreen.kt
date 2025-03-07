@@ -135,7 +135,7 @@ private fun HistoryListItem(
 }
 
 @Composable
-fun HistoryItem(modifier: Modifier = Modifier, data: HistoryData) {
+fun HistoryItem(data: HistoryData) {
     Column(
         modifier = Modifier
             .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
@@ -155,7 +155,7 @@ fun HistoryItem(modifier: Modifier = Modifier, data: HistoryData) {
                 color = MaterialTheme.colorScheme.outline
             )
             Text(
-                data.createDate.toString(),
+                data.createDate,
                 style = MaterialTheme.typography.bodyMedium.copy(Color.LightGray)
             )
         }
