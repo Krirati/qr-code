@@ -7,6 +7,6 @@ interface ScanHistoryRepository {
     fun getAllItemsStream(): Flow<List<ScanHistoryItem>>
     fun getItemStream(id: Int): Flow<ScanHistoryItem?>
     suspend fun insertItem(item: ScanHistoryItem)
-    suspend fun deleteItem(item: ScanHistoryItem)
+    suspend fun deleteItem(id: Int)
     suspend fun updateItem(item: ScanHistoryItem)
 }

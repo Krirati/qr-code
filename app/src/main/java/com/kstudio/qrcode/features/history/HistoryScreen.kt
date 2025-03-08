@@ -1,8 +1,14 @@
 package com.kstudio.qrcode.features.history
 
+import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -16,16 +22,26 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxState
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,13 +54,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kstudio.qrcode.LocalNavController
 import com.kstudio.qrcode.R
-import com.kstudio.qrcode.di.appModule
 import com.kstudio.qrcode.features.history.model.HistoryData
 import com.kstudio.qrcode.features.history.model.HistoryUiState
 import com.kstudio.qrcode.ui.component.loading.Loading
 import com.kstudio.qrcode.ui.theme.QrCodeTheme
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.KoinApplication
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,7 +106,7 @@ fun HistoryScreen(
             }
 
             is HistoryUiState.Success -> {
-                HistoryListItem(paddingValues, state)
+                HistoryListItem(paddingValues, state, onDelete = viewModel::deleteHistory)
             }
         }
 
@@ -116,6 +131,7 @@ private fun HistoryEmpty() {
         Spacer(modifier = Modifier.height(12.dp))
         Text(
             "Don't has history of scan",
+            color = MaterialTheme.colorScheme.tertiary,
             style = MaterialTheme.typography.titleLarge,
             textAlign = TextAlign.Center
         )
@@ -125,11 +141,23 @@ private fun HistoryEmpty() {
 @Composable
 private fun HistoryListItem(
     paddingValues: PaddingValues,
-    state: HistoryUiState.Success
+    state: HistoryUiState.Success,
+    onDelete: (HistoryData) -> Unit
 ) {
-    LazyColumn(modifier = Modifier.padding(paddingValues)) {
-        items(state.data) { item ->
-            HistoryItem(data = item)
+    LazyColumn(
+        modifier = Modifier.padding(paddingValues),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(state.data) { history ->
+            SwipeToDeleteContainer(
+                item = history,
+                onDelete = { item ->
+                    onDelete.invoke(item)
+                }
+            ) { item ->
+                HistoryItem(data = item)
+            }
         }
     }
 }
@@ -137,9 +165,7 @@ private fun HistoryListItem(
 @Composable
 fun HistoryItem(data: HistoryData) {
     Column(
-        modifier = Modifier
-            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-            .clip(RoundedCornerShape(12.dp)),
+        modifier = Modifier.clip(RoundedCornerShape(12.dp)),
     ) {
         Column(
             modifier = Modifier
@@ -162,6 +188,88 @@ fun HistoryItem(data: HistoryData) {
     }
 }
 
+@Composable
+fun <T> SwipeToDeleteContainer(
+    item: T,
+    onDelete: (T) -> Unit,
+    animationDuration: Int = 500,
+    content: @Composable (T) -> Unit
+) {
+    var isRemoved by remember { mutableStateOf(false) }
+    val state = rememberSwipeToDismissBoxState(
+        initialValue = SwipeToDismissBoxValue.Settled,
+        confirmValueChange = { value ->
+            if (value == SwipeToDismissBoxValue.EndToStart) {
+                isRemoved = true
+                true
+            } else {
+                false
+            }
+        }
+    )
+
+    LaunchedEffect(key1 = isRemoved) {
+        if (isRemoved) {
+            delay(animationDuration.toLong())
+            onDelete(item)
+        }
+    }
+
+    AnimatedVisibility(
+        visible = !isRemoved,
+        exit = shrinkVertically(
+            animationSpec = tween(durationMillis = animationDuration),
+            shrinkTowards = Alignment.Top
+        ) + fadeOut()
+    ) {
+        SwipeToDismissBox(
+            state = state,
+            backgroundContent = { DeleteItemBackground(state) },
+            content = { content(item) },
+        )
+    }
+
+}
+
+@Composable
+fun DeleteItemBackground(swipeDismissState: SwipeToDismissBoxState) {
+    val color = if (swipeDismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
+        Color.Red
+    } else {
+        Color.Transparent
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(12.dp))
+            .background(color)
+            .padding(12.dp),
+        contentAlignment = Alignment.CenterEnd
+    ) {
+        Icon(
+            imageVector = Icons.Default.Delete,
+            null,
+            tint = Color.White
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun DeleteItemBackgroundPreview() {
+    val history = HistoryData(0, "test1", "")
+    QrCodeTheme {
+        SwipeToDeleteContainer(
+            item = history,
+            onDelete = { item ->
+                Log.d("test", ">>> $item")
+            }
+        ) { item ->
+            HistoryItem(data = item)
+        }
+    }
+}
+
 @Preview
 @Composable
 private fun HistoryEmptyPreview() {
@@ -176,18 +284,5 @@ private fun HistoryEmptyPreview() {
 private fun HistoryItemPreview() {
     QrCodeTheme {
         HistoryItem(data = HistoryData(id = 0, title = "test", createDate = "01/01/2025"))
-    }
-}
-
-
-@Preview
-@Composable
-private fun HistoryScreenPreview() {
-    KoinApplication(application = {
-        modules(appModule)
-    }) {
-        QrCodeTheme {
-            HistoryScreen()
-        }
     }
 }

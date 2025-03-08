@@ -18,12 +18,12 @@ interface ScanHistoryDao {
     @Update
     suspend fun update(item: ScanHistoryItem)
 
-    @Delete
-    suspend fun delete(item: ScanHistoryItem)
+    @Query("DELETE FROM scan_history WHERE id = :id")
+    suspend fun delete(id: Int)
 
     @Query("SELECT * from scan_history WHERE id = :id")
     fun getHistory(id: Int): Flow<ScanHistoryItem>
 
-    @Query("SELECT * from scan_history ORDER BY id ASC")
+    @Query("SELECT * from scan_history ORDER BY createDateTime DESC")
     fun getAllHistory(): Flow<List<ScanHistoryItem>>
 }

@@ -10,8 +10,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
-class HistoryViewModel(historyRepository: ScanHistoryRepository) : ViewModel() {
+class HistoryViewModel(private val historyRepository: ScanHistoryRepository) : ViewModel() {
 
     val historyState: StateFlow<HistoryUiState> =
         historyRepository.getAllItemsStream().map { items ->
@@ -28,5 +29,11 @@ class HistoryViewModel(historyRepository: ScanHistoryRepository) : ViewModel() {
 
     private fun List<ScanHistoryItem>.mapToHistoryData() = this.map {
         HistoryData(id = it.id, title = it.value, createDate = it.createdDateFormatted)
+    }
+
+    fun deleteHistory(historyData: HistoryData) {
+        viewModelScope.launch {
+            historyRepository.deleteItem(historyData.id)
+        }
     }
 }

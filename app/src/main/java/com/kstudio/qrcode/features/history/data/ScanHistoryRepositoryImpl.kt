@@ -11,7 +11,7 @@ class ScanHistoryRepositoryImpl(private val itemDao: ScanHistoryDao) : ScanHisto
 
     override suspend fun insertItem(item: ScanHistoryItem) = itemDao.insert(item)
 
-    override suspend fun deleteItem(item: ScanHistoryItem) = itemDao.delete(item)
+    override suspend fun deleteItem(id: Int) = itemDao.delete(id)
 
     override suspend fun updateItem(item: ScanHistoryItem) = itemDao.update(item)
 }

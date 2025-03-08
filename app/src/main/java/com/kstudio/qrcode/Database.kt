@@ -12,7 +12,7 @@ import com.kstudio.qrcode.features.history.data.model.ScanHistoryItem
 @Database(
     entities = [ScanHistoryItem::class],
     version = 1,
-    exportSchema = false,
+    exportSchema = true,
 )
 @TypeConverters(Converters::class)
 abstract class ScanDatabase : RoomDatabase() {

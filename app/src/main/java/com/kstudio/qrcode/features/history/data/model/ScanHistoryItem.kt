@@ -10,6 +10,7 @@ data class ScanHistoryItem(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val value: String,
+    val isFavorite: Boolean = false,
     val createDateTime: LocalDateTime = LocalDateTime.now()
 ) {
     val createdDateFormatted: String
