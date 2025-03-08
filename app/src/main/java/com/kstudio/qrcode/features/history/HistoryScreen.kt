@@ -1,5 +1,6 @@
 package com.kstudio.qrcode.features.history
 
+import android.app.Activity
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -40,6 +41,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -52,10 +54,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kstudio.qrcode.LocalNavController
 import com.kstudio.qrcode.R
@@ -73,11 +77,28 @@ import org.koin.androidx.compose.koinViewModel
 fun HistoryScreen(
     viewModel: HistoryViewModel = koinViewModel()
 ) {
+
+    val context = LocalContext.current
     val navController = LocalNavController.current
     val historyUiState = viewModel.historyState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
-    var showBottomSheet = viewModel.bottomSheetData.collectAsStateWithLifecycle()
+    val showBottomSheet = viewModel.bottomSheetData.collectAsStateWithLifecycle()
+    val window = (context as Activity).window
+
+    DisposableEffect(Unit) {
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightNavigationBars = true
+            isAppearanceLightStatusBars = true
+        }
+
+        onDispose {
+            WindowCompat.getInsetsController(window, window.decorView).apply {
+                isAppearanceLightNavigationBars = false
+                isAppearanceLightStatusBars = false
+            }
+        }
+    }
     Scaffold(topBar = {
         TopAppBar(
             colors = TopAppBarDefaults.topAppBarColors(
