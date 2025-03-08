@@ -7,10 +7,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,12 +37,15 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,6 +61,8 @@ import com.kstudio.qrcode.LocalNavController
 import com.kstudio.qrcode.R
 import com.kstudio.qrcode.features.history.model.HistoryData
 import com.kstudio.qrcode.features.history.model.HistoryUiState
+import com.kstudio.qrcode.ui.component.bottomsheet.LinkDetailBottomSheet
+import com.kstudio.qrcode.ui.component.bottomsheet.model.BottomSheetData
 import com.kstudio.qrcode.ui.component.loading.Loading
 import com.kstudio.qrcode.ui.theme.QrCodeTheme
 import kotlinx.coroutines.delay
@@ -68,7 +75,9 @@ fun HistoryScreen(
 ) {
     val navController = LocalNavController.current
     val historyUiState = viewModel.historyState.collectAsStateWithLifecycle()
-
+    val scope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState()
+    var showBottomSheet = viewModel.bottomSheetData.collectAsStateWithLifecycle()
     Scaffold(topBar = {
         TopAppBar(
             colors = TopAppBarDefaults.topAppBarColors(
@@ -106,10 +115,29 @@ fun HistoryScreen(
             }
 
             is HistoryUiState.Success -> {
-                HistoryListItem(paddingValues, state, onDelete = viewModel::deleteHistory)
+                HistoryListItem(
+                    paddingValues = paddingValues,
+                    state = state,
+                    onClickItem = viewModel::updateDataBottomSheet,
+                    onClickFavorite = viewModel::updateItemFavoriteStatus,
+                    onDelete = viewModel::deleteHistory
+                )
             }
         }
-
+        if (showBottomSheet.value != null) {
+            val data = showBottomSheet.value ?: return@Scaffold
+            LinkDetailBottomSheet(
+                scope = scope,
+                onClose = { viewModel.updateDataBottomSheet(null) },
+                sheetState = sheetState,
+                data = BottomSheetData(
+                    id = data.id,
+                    isFavorite = data.isFavorite,
+                    link = data.title
+                ),
+                onClickFavorite = { viewModel.updateItemFavoriteStatus(showBottomSheet.value!!) }
+            )
+        }
     }
 }
 
@@ -142,6 +170,8 @@ private fun HistoryEmpty() {
 private fun HistoryListItem(
     paddingValues: PaddingValues,
     state: HistoryUiState.Success,
+    onClickItem: (HistoryData) -> Unit,
+    onClickFavorite: (HistoryData) -> Unit,
     onDelete: (HistoryData) -> Unit
 ) {
     LazyColumn(
@@ -156,16 +186,34 @@ private fun HistoryListItem(
                     onDelete.invoke(item)
                 }
             ) { item ->
-                HistoryItem(data = item)
+                HistoryItem(
+                    data = item,
+                    onClickItem = { historyData -> onClickItem(historyData) },
+                    onClickFavorite = onClickFavorite
+                )
             }
         }
     }
 }
 
 @Composable
-fun HistoryItem(data: HistoryData) {
+fun HistoryItem(
+    data: HistoryData,
+    onClickItem: (HistoryData) -> Unit,
+    onClickFavorite: (HistoryData) -> Unit
+) {
+    var isFavoriteState by remember { mutableStateOf(data.isFavorite) }
+    val startIcon by remember(isFavoriteState) {
+        mutableIntStateOf(
+            if (isFavoriteState) R.drawable.ic_star_selected else R.drawable.ic_star
+        )
+    }
     Column(
-        modifier = Modifier.clip(RoundedCornerShape(12.dp)),
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable {
+                onClickItem.invoke(data)
+            },
     ) {
         Column(
             modifier = Modifier
@@ -175,7 +223,23 @@ fun HistoryItem(data: HistoryData) {
                 .padding(16.dp)
 
         ) {
-            Text(data.title, style = MaterialTheme.typography.titleMedium.copy(Color.Black))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    modifier = Modifier.weight(1f),
+                    text = data.title,
+                    style = MaterialTheme.typography.titleMedium.copy(Color.Black)
+                )
+                IconButton(onClick = {
+                    isFavoriteState = !isFavoriteState
+                    onClickFavorite.invoke(data)
+                }) {
+                    Icon(
+                        painter = painterResource(startIcon),
+                        contentDescription = "favorite",
+                        tint = Color.Unspecified
+                    )
+                }
+            }
             HorizontalDivider(
                 Modifier.padding(vertical = 12.dp),
                 color = MaterialTheme.colorScheme.outline
@@ -226,9 +290,9 @@ fun <T> SwipeToDeleteContainer(
             state = state,
             backgroundContent = { DeleteItemBackground(state) },
             content = { content(item) },
+            enableDismissFromStartToEnd = false
         )
     }
-
 }
 
 @Composable
@@ -257,7 +321,7 @@ fun DeleteItemBackground(swipeDismissState: SwipeToDismissBoxState) {
 @Preview
 @Composable
 private fun DeleteItemBackgroundPreview() {
-    val history = HistoryData(0, "test1", "")
+    val history = HistoryData(0, "test1", false, "14 fev 2025")
     QrCodeTheme {
         SwipeToDeleteContainer(
             item = history,
@@ -265,7 +329,7 @@ private fun DeleteItemBackgroundPreview() {
                 Log.d("test", ">>> $item")
             }
         ) { item ->
-            HistoryItem(data = item)
+            HistoryItem(data = item, {}, {})
         }
     }
 }
@@ -283,6 +347,6 @@ private fun HistoryEmptyPreview() {
 @Composable
 private fun HistoryItemPreview() {
     QrCodeTheme {
-        HistoryItem(data = HistoryData(id = 0, title = "test", createDate = "01/01/2025"))
+        HistoryItem(data = HistoryData(id = 0, title = "test", createDate = "01/01/2025"), {}, {})
     }
 }

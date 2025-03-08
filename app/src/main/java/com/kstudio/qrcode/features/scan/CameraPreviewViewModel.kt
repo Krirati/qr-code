@@ -6,9 +6,11 @@ import androidx.lifecycle.viewModelScope
 import com.kstudio.qrcode.features.history.data.ScanHistoryRepository
 import com.kstudio.qrcode.features.history.data.model.ScanHistoryItem
 import com.kstudio.qrcode.features.scan.model.ScanImageState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 
 sealed class UiState {
@@ -23,6 +25,7 @@ class CameraPreviewViewModel(
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Analysis)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+    private var newIdItem: Long? = null
 
     fun onResultScanAnalyzer(result: ScanImageState) {
         when (result) {
@@ -41,10 +44,27 @@ class CameraPreviewViewModel(
         _uiState.value = UiState.AnalysisGalleryImage(uri)
     }
 
-     fun saveScanHistory(uri: String) {
+    fun saveScanHistory(uri: String) {
         if (uri.isEmpty()) return
         viewModelScope.launch {
-            scanHistoryRepository.insertItem(ScanHistoryItem(value = uri))
+            val id = scanHistoryRepository.insertItem(ScanHistoryItem(value = uri))
+            newIdItem = id
         }
     }
+
+    fun updateItemFavoriteStatus() {
+        newIdItem?.let {
+            viewModelScope.launch {
+                getHistoryFromId(it.toInt()).collect {
+                    if (it != null) {
+                        val newItem = it.copy(isFavorite = !it.isFavorite)
+                        scanHistoryRepository.updateItem(newItem)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun getHistoryFromId(id: Int) =
+        scanHistoryRepository.getItemStream(id).flowOn(Dispatchers.IO)
 }

@@ -9,7 +9,7 @@ class ScanHistoryRepositoryImpl(private val itemDao: ScanHistoryDao) : ScanHisto
 
     override fun getItemStream(id: Int): Flow<ScanHistoryItem?> = itemDao.getHistory(id)
 
-    override suspend fun insertItem(item: ScanHistoryItem) = itemDao.insert(item)
+    override suspend fun insertItem(item: ScanHistoryItem): Long = itemDao.insert(item)
 
     override suspend fun deleteItem(id: Int) = itemDao.delete(id)
 

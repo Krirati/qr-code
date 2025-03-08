@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 interface ScanHistoryDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(item: ScanHistoryItem)
+    suspend fun insert(item: ScanHistoryItem): Long
 
     @Update
     suspend fun update(item: ScanHistoryItem)

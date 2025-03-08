@@ -28,7 +28,12 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,12 +55,20 @@ import kotlinx.coroutines.launch
 @Composable
 fun LinkDetailBottomSheet(
     onClose: () -> Unit,
+    onClickFavorite: () -> Unit,
     sheetState: SheetState,
     scope: CoroutineScope,
     data: BottomSheetData
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+    var isFavoriteState by remember { mutableStateOf(data.isFavorite) }
+    val startIcon by remember(isFavoriteState) {
+        mutableIntStateOf(
+            if (isFavoriteState) R.drawable.ic_star_selected else R.drawable.ic_star
+        )
+    }
+
     ModalBottomSheet(
         containerColor = Color.White,
         sheetState = sheetState,
@@ -96,7 +109,10 @@ fun LinkDetailBottomSheet(
                 icon = R.drawable.ic_share,
                 onClick = shareQrData(data, context)
             )
-            MenuButton(text = "Favorite", icon = R.drawable.ic_star) {}
+            MenuButton(text = "Favorite", icon = startIcon) {
+                isFavoriteState = !isFavoriteState
+                onClickFavorite.invoke()
+            }
             Spacer(Modifier.height(16.dp))
             Button({
                 openExternalLink(data, context)
@@ -165,7 +181,8 @@ private fun MenuButton(text: String, icon: Int, onClick: () -> Unit) {
     ) {
         Icon(
             painter = painterResource(icon),
-            contentDescription = text
+            contentDescription = text,
+            tint = Color.Unspecified
         )
         Spacer(Modifier.width(24.dp))
         Text(
@@ -183,9 +200,10 @@ private fun LinkDetailBottomSheetPreview() {
     QrCodeTheme {
         LinkDetailBottomSheet(
             onClose = {},
+            onClickFavorite = {},
             sheetState = sheetState,
             scope = scope,
-            data = BottomSheetData("")
+            data = BottomSheetData(0, false, "")
         )
     }
 }

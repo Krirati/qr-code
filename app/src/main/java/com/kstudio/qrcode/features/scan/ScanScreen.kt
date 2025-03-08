@@ -119,7 +119,8 @@ fun ScanScreen(
                             viewModel.restartAnalysis()
                         },
                         sheetState = sheetState,
-                        data = BottomSheetData(state.data)
+                        data = BottomSheetData(link = state.data),
+                        onClickFavorite = { viewModel.updateItemFavoriteStatus() }
                     )
                 }
                 if (state is UiState.AnalysisGalleryImage) {
