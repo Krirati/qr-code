@@ -1,4 +1,4 @@
-package com.kstudio.qrcode.features.scan
+package com.kstudio.qrcode.features.scan.analyzer
 
 import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage

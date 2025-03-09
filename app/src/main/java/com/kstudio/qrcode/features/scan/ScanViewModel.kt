@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.kstudio.qrcode.features.history.data.ScanHistoryRepository
 import com.kstudio.qrcode.features.history.data.model.ScanHistoryItem
 import com.kstudio.qrcode.features.scan.model.ScanImageState
+import com.kstudio.qrcode.features.scan.model.UiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,13 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 
-sealed class UiState {
-    data object Analysis : UiState()
-    data class AnalysisGalleryImage(val url: Uri?) : UiState()
-    data class DisplayBottomSheet(val data: String) : UiState()
-}
-
-class CameraPreviewViewModel(
+class ScanViewModel(
     private val scanHistoryRepository: ScanHistoryRepository
 ) : ViewModel() {
 

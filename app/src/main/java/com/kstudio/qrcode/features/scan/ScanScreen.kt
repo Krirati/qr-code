@@ -34,6 +34,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
@@ -67,7 +68,9 @@ import com.google.mlkit.vision.common.InputImage
 import com.kstudio.qrcode.LocalNavController
 import com.kstudio.qrcode.R
 import com.kstudio.qrcode.Screen
+import com.kstudio.qrcode.features.scan.analyzer.ScannerAnalyzer
 import com.kstudio.qrcode.features.scan.model.ScanImageState
+import com.kstudio.qrcode.features.scan.model.UiState
 import com.kstudio.qrcode.ui.component.bottomsheet.LinkDetailBottomSheet
 import com.kstudio.qrcode.ui.component.bottomsheet.model.BottomSheetData
 import com.kstudio.qrcode.ui.component.button.buttonColors
@@ -78,7 +81,7 @@ import java.util.concurrent.Executor
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ScanScreen(
-    viewModel: CameraPreviewViewModel = koinViewModel(),
+    viewModel: ScanViewModel = koinViewModel(),
 ) {
     val context = LocalContext.current
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
@@ -194,9 +197,9 @@ fun NoPermissionScreen(
 fun CameraPreview(
     paddingValues: PaddingValues,
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
-    viewModel: CameraPreviewViewModel = koinViewModel(),
+    viewModel: ScanViewModel = koinViewModel(),
     uiState: UiState,
-    launcherGallery: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>
+    launcherGallery: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>,
 ) {
     val context = LocalContext.current
     val previewView: PreviewView = remember { PreviewView(context) }
@@ -211,6 +214,12 @@ fun CameraPreview(
                 executor,
                 ScannerAnalyzer(scanner, latestOnResult)
             )
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            cameraController.unbind()
         }
     }
 
@@ -276,6 +285,7 @@ fun bindCameraController(
     cameraController: LifecycleCameraController,
     lifecycleOwner: LifecycleOwner
 ) {
+    cameraController.unbind()
     cameraController.bindToLifecycle(lifecycleOwner)
 }
 

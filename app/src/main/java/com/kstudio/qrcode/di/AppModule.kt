@@ -7,7 +7,7 @@ import com.kstudio.qrcode.features.history.HistoryViewModel
 import com.kstudio.qrcode.features.history.data.ScanHistoryRepository
 import com.kstudio.qrcode.features.history.data.ScanHistoryRepositoryImpl
 import com.kstudio.qrcode.features.history.data.datasource.ScanHistoryDao
-import com.kstudio.qrcode.features.scan.CameraPreviewViewModel
+import com.kstudio.qrcode.features.scan.ScanViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
@@ -19,7 +19,7 @@ val appModule = module {
     single { provideDatabase(get()) }
     single { provideHistoryDao(get()) }
     factory<ScanHistoryRepository> { ScanHistoryRepositoryImpl(get()) }
-    viewModelOf(::CameraPreviewViewModel)
+    viewModelOf(::ScanViewModel)
     viewModelOf(::GenerateQrViewModel)
     viewModelOf(::HistoryViewModel)
 }
