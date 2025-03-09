@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">Qr Code</string>
+    <string name="ad_id_app_open">ca-app-pub-9981727343750503/7234480424</string>
+    <string name="ad_id_native_advance">ca-app-pub-9981727343750503/1770368934</string>
+    <string name="copy">Copy</string>
+    <string name="share">Share</string>
+    <string name="favorite">Favorite</string>
+    <string name="open_link">OPEN LINK</string>
+    <string name="toast_copy_success">Copy success !</string>
+    <string name="generate_qr_code">Generate QR Code</string>
+    <string name="navigate_back">Navigate back</string>
+    <string name="input_link_or_data">Input link or data</string>
+    <string name="confirm">CONFIRM</string>
+    <string name="toast_save_qr_success">Save Qr Success !!</string>
+    <string name="don_t_has_history_of_scan">Don\'t has history of scan</string>
+    <string name="history_of_scan">History of scan</string>
 </resources>

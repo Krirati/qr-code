@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
@@ -84,13 +85,13 @@ fun GenerateScreen(
                         titleContentColor = MaterialTheme.colorScheme.tertiary,
                     ),
                     title = {
-                        Text("Generate QR Code")
+                        Text(stringResource(R.string.generate_qr_code))
                     },
                     navigationIcon = {
                         IconButton(onClick = { navController?.popBackStack() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Localized description"
+                                contentDescription = stringResource(R.string.navigate_back)
                             )
                         }
                     }
@@ -109,14 +110,14 @@ fun GenerateScreen(
                 OutlinedTextField(
                     value = viewModel.textFieldLinkData,
                     onValueChange = { text -> viewModel.onTextFieldChange(text) },
-                    label = { Text("Input link or data") },
+                    label = { Text(stringResource(R.string.input_link_or_data)) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Button(
                     onClick = { viewModel.onConfirmField() },
                     modifier = Modifier.padding(top = 32.dp)
                 ) {
-                    Text("CONFIRM")
+                    Text(stringResource(R.string.confirm))
                 }
                 Row(modifier = Modifier.padding(top = 16.dp)) {
                     IconButton(
@@ -124,7 +125,8 @@ fun GenerateScreen(
                         onClick = {
                             viewModel.saveQrResult()
                             viewModel.saveBitmapToGallery(context, bitmapImage)
-                            Toast.makeText(context, "Save Qr Success !!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context,
+                                context.getString(R.string.toast_save_qr_success), Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier
                             .size(60.dp)
@@ -148,7 +150,7 @@ fun GenerateScreen(
                     ) {
                         Image(
                             painter = painterResource(R.drawable.ic_share),
-                            contentDescription = "Share",
+                            contentDescription = stringResource(R.string.share),
                             colorFilter = ColorFilter.tint(color = colorResource(R.color.white))
                         )
                     }

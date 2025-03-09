@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
 import com.kstudio.qrcode.ui.theme.QrCodeTheme
+import org.koin.compose.KoinContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,8 +19,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
-            QrCodeTheme {
-                AppNavHost(navHostController = rememberNavController())
+            KoinContext {
+                QrCodeTheme {
+                    AppNavHost(navHostController = rememberNavController())
+                }
             }
         }
     }
