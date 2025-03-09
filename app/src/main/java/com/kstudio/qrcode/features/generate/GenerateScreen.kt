@@ -1,6 +1,7 @@
 package com.kstudio.qrcode.features.generate
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -32,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -42,9 +44,11 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -65,6 +69,7 @@ fun GenerateScreen(
     viewModel: GenerateQrViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
+    val window = (context as Activity).window
     val navController = LocalNavController.current
     val bitmapImage by viewModel.qrBitmap.collectAsStateWithLifecycle(null)
     val storagePermissionState = rememberPermissionState(Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -72,6 +77,20 @@ fun GenerateScreen(
     SideEffect {
         if (!storagePermissionState.status.isGranted) {
             storagePermissionState.launchPermissionRequest()
+        }
+    }
+
+    DisposableEffect(Unit) {
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightNavigationBars = true
+            isAppearanceLightStatusBars = true
+        }
+
+        onDispose {
+            WindowCompat.getInsetsController(window, window.decorView).apply {
+                isAppearanceLightNavigationBars = false
+                isAppearanceLightStatusBars = false
+            }
         }
     }
 
@@ -83,14 +102,12 @@ fun GenerateScreen(
                         containerColor = MaterialTheme.colorScheme.background,
                         titleContentColor = MaterialTheme.colorScheme.tertiary,
                     ),
-                    title = {
-                        Text("Generate QR Code")
-                    },
+                    title = { Text(stringResource(R.string.generate_qr_code)) },
                     navigationIcon = {
                         IconButton(onClick = { navController?.popBackStack() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Localized description"
+                                contentDescription = stringResource(R.string.navigate_back)
                             )
                         }
                     }
@@ -109,14 +126,14 @@ fun GenerateScreen(
                 OutlinedTextField(
                     value = viewModel.textFieldLinkData,
                     onValueChange = { text -> viewModel.onTextFieldChange(text) },
-                    label = { Text("Input link or data") },
+                    label = { Text(stringResource(R.string.input_link_or_data)) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Button(
                     onClick = { viewModel.onConfirmField() },
                     modifier = Modifier.padding(top = 32.dp)
                 ) {
-                    Text("CONFIRM")
+                    Text(stringResource(R.string.confirm))
                 }
                 Row(modifier = Modifier.padding(top = 16.dp)) {
                     IconButton(
@@ -124,7 +141,8 @@ fun GenerateScreen(
                         onClick = {
                             viewModel.saveQrResult()
                             viewModel.saveBitmapToGallery(context, bitmapImage)
-                            Toast.makeText(context, "Save Qr Success !!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context,
+                                context.getString(R.string.toast_save_qr_success), Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier
                             .size(60.dp)
@@ -148,7 +166,7 @@ fun GenerateScreen(
                     ) {
                         Image(
                             painter = painterResource(R.drawable.ic_share),
-                            contentDescription = "Share",
+                            contentDescription = stringResource(R.string.share),
                             colorFilter = ColorFilter.tint(color = colorResource(R.color.white))
                         )
                     }

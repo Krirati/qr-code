@@ -15,7 +15,7 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
+        multiDexEnabled = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -84,13 +84,22 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.play.services.mlkit.barcode.scanning)
 
+    // room db
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    // koin
     implementation(libs.koin.androidx.compose)
     testImplementation(libs.koin.test.junit4)
 
+    // generate qr
     implementation(libs.zxing.core)
     implementation(libs.ui.graphics)
+
+    implementation(libs.play.services.ads)
+    implementation(libs.androidx.lifecycle.process)
+
+    // coil image
+    implementation(libs.coil.compose)
 }

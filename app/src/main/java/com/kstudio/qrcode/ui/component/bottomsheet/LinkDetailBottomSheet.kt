@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -99,17 +100,17 @@ fun LinkDetailBottomSheet(
             )
             Spacer(modifier = Modifier.height(16.dp))
             MenuButton(
-                text = "Copy",
+                text = stringResource(R.string.copy),
                 icon = R.drawable.ic_copy,
                 onClick = copyQrData(clipboardManager, data, context)
             )
 
             MenuButton(
-                text = "Share",
+                text = stringResource(R.string.share),
                 icon = R.drawable.ic_share,
                 onClick = shareQrData(data, context)
             )
-            MenuButton(text = "Favorite", icon = startIcon) {
+            MenuButton(text = stringResource(R.string.favorite), icon = startIcon) {
                 isFavoriteState = !isFavoriteState
                 onClickFavorite.invoke()
             }
@@ -117,7 +118,7 @@ fun LinkDetailBottomSheet(
             Button({
                 openExternalLink(data, context)
             }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-                Text("OPEN LINK", Modifier.padding(vertical = 8.dp, horizontal = 16.dp))
+                Text(stringResource(R.string.open_link), Modifier.padding(vertical = 8.dp, horizontal = 16.dp))
             }
         }
     }
@@ -140,7 +141,7 @@ private fun copyQrData(
 ): () -> Unit = {
     clipboardManager.setText(AnnotatedString(data.link))
     if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
-        Toast.makeText(context, "Copy success !", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, context.getString(R.string.toast_copy_success), Toast.LENGTH_SHORT).show()
     }
 }
 

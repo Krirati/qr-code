@@ -56,6 +56,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -65,6 +66,8 @@ import com.kstudio.qrcode.LocalNavController
 import com.kstudio.qrcode.R
 import com.kstudio.qrcode.features.history.model.HistoryData
 import com.kstudio.qrcode.features.history.model.HistoryUiState
+import com.kstudio.qrcode.ui.component.ad.NativeAdView
+import com.kstudio.qrcode.ui.component.ad.itemsWithAd
 import com.kstudio.qrcode.ui.component.bottomsheet.LinkDetailBottomSheet
 import com.kstudio.qrcode.ui.component.bottomsheet.model.BottomSheetData
 import com.kstudio.qrcode.ui.component.loading.Loading
@@ -105,9 +108,7 @@ fun HistoryScreen(
                 containerColor = MaterialTheme.colorScheme.background,
                 titleContentColor = MaterialTheme.colorScheme.tertiary,
             ),
-            title = {
-                Text("History of scan")
-            },
+            title = { Text(stringResource(R.string.history_of_scan)) },
             navigationIcon = {
                 IconButton(onClick = { navController?.popBackStack() }) {
                     Icon(
@@ -179,7 +180,7 @@ private fun HistoryEmpty() {
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            "Don't has history of scan",
+            stringResource(R.string.don_t_has_history_of_scan),
             color = MaterialTheme.colorScheme.tertiary,
             style = MaterialTheme.typography.titleLarge,
             textAlign = TextAlign.Center
@@ -195,25 +196,30 @@ private fun HistoryListItem(
     onClickFavorite: (HistoryData) -> Unit,
     onDelete: (HistoryData) -> Unit
 ) {
+    val context = LocalContext.current
     LazyColumn(
         modifier = Modifier.padding(paddingValues),
         contentPadding = PaddingValues(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(state.data) { history ->
-            SwipeToDeleteContainer(
-                item = history,
-                onDelete = { item ->
-                    onDelete.invoke(item)
+        itemsWithAd(
+            items = state.data,
+            paddingItem = 12.dp,
+            key = { item -> item.id },
+            adItem = { NativeAdView(context) },
+            itemContent = { history ->
+                SwipeToDeleteContainer(
+                    item = history,
+                    onDelete = { item -> onDelete.invoke(item) }
+                ) { item ->
+                    HistoryItem(
+                        data = item,
+                        onClickItem = { historyData -> onClickItem(historyData) },
+                        onClickFavorite = onClickFavorite
+                    )
                 }
-            ) { item ->
-                HistoryItem(
-                    data = item,
-                    onClickItem = { historyData -> onClickItem(historyData) },
-                    onClickFavorite = onClickFavorite
-                )
             }
-        }
+        )
     }
 }
 
