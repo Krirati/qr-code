@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Context
 import android.net.Uri
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -206,6 +205,7 @@ fun CameraPreview(
     val executor = rememberMainExecutor(context)
     val scanner = rememberScanner()
     val latestOnResult = rememberLatestOnResult(viewModel::onResultScanAnalyzer)
+    var isFlashOn by remember { mutableStateOf(false) }
 
     val cameraController = remember {
         LifecycleCameraController(context).apply {
@@ -221,6 +221,10 @@ fun CameraPreview(
         onDispose {
             cameraController.unbind()
         }
+    }
+
+    LaunchedEffect(isFlashOn) {
+        cameraController.enableTorch(isFlashOn)
     }
 
     LaunchedEffect(uiState) {
@@ -251,7 +255,10 @@ fun CameraPreview(
                 }
             },
         )
-        TopOptionSection(paddingValues)
+        TopOptionSection(paddingValues, isFlashOn) {
+            isFlashOn = !isFlashOn
+            cameraController.enableTorch(isFlashOn)
+        }
         Box(
             modifier = Modifier
                 .background(Color.Transparent)
@@ -290,9 +297,11 @@ fun bindCameraController(
 }
 
 @Composable
-private fun TopOptionSection(paddingValues: PaddingValues) {
-    val context = LocalContext.current
-
+private fun TopOptionSection(
+    paddingValues: PaddingValues,
+    isFlashOn: Boolean,
+    onClickFlash: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -302,13 +311,11 @@ private fun TopOptionSection(paddingValues: PaddingValues) {
         horizontalArrangement = Arrangement.End
     ) {
         FilledIconButton(
-            onClick = {
-                Toast.makeText(context, "Toast", Toast.LENGTH_SHORT).show()
-            },
+            onClick = onClickFlash::invoke,
             colors = buttonColors()
         ) {
             Image(
-                painter = painterResource(R.drawable.ic_zap),
+                painter = painterResource(if (isFlashOn) R.drawable.ic_zap else R.drawable.ic_zap_off),
                 "flash"
             )
         }

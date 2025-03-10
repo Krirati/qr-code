@@ -74,7 +74,9 @@ dependencies {
 
     // Camera
     // The following line is optional, as the core library is included indirectly by camera-camera2
-    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.core) {
+        exclude(group = "com.google.guava", module = "listenablefuture")
+    }
     implementation(libs.androidx.camera.compose)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
@@ -82,6 +84,8 @@ dependencies {
     implementation(libs.androidx.camera.extensions)
     implementation(libs.androidx.camera.view)
     implementation(libs.accompanist.permissions)
+    implementation(libs.androidx.concurrent.futures)
+    implementation(libs.guava)
 
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.play.services.mlkit.barcode.scanning)
