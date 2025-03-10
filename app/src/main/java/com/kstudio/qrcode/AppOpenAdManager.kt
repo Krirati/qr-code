@@ -13,6 +13,8 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.appopen.AppOpenAd
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.Date
 
 interface OnShowAdCompleteListener {
@@ -61,6 +63,7 @@ class AppOpenAdManager(application: Application, private val adUnit: String) :
     private var appOpenAd: AppOpenAd? = null
     private var isLoadingAd = false
     private var loadTime: Long = 0
+    private var lastTimeDisplay = LocalDateTime.now()
     var isShowingAd = false
 
 
@@ -114,8 +117,17 @@ class AppOpenAdManager(application: Application, private val adUnit: String) :
         )
     }
 
-    private fun showAdIfAvailable(activity: Activity, onShowAdCompleteListener: OnShowAdCompleteListener) {
+    private fun showAdIfAvailable(
+        activity: Activity,
+        onShowAdCompleteListener: OnShowAdCompleteListener
+    ) {
         if (isShowingAd) {
+            return
+        }
+
+        val diff = ChronoUnit.MINUTES.between(lastTimeDisplay, LocalDateTime.now())
+        if (diff < 10) {
+            lastTimeDisplay = LocalDateTime.now()
             return
         }
 
