@@ -93,7 +93,6 @@ fun LinkDetailBottomSheet(
                     Icon(Icons.Default.Clear, contentDescription = "Close modal detail")
                 }
             }
-
             Text(
                 "Link ${data.link}", style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Normal
@@ -125,12 +124,17 @@ fun LinkDetailBottomSheet(
 }
 
 private fun openExternalLink(data: BottomSheetData, context: Context) {
-    val intent = Intent().apply {
-        setAction(Intent.ACTION_VIEW)
-        setData(Uri.parse(data.link))
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+   val result = runCatching {
+        val intent = Intent().apply {
+            setAction(Intent.ACTION_VIEW)
+            setData(Uri.parse(data.link))
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
     }
-    context.startActivity(intent)
+    result.onFailure {
+        Toast.makeText(context, "This qr code can't open", Toast.LENGTH_SHORT).show()
+    }
 }
 
 @Composable
