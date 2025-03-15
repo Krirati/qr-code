@@ -4,7 +4,6 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -84,13 +83,11 @@ class AppOpenAdManager(application: Application, private val adUnit: String) :
                     appOpenAd = ad
                     isLoadingAd = false
                     loadTime = Date().time
-                    Log.d("test", "onAdLoaded.")
                 }
 
 
                 override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                     isLoadingAd = false
-                    Log.d("test", "onAdFailedToLoad: " + loadAdError.message)
                 }
             }
         )
@@ -126,7 +123,7 @@ class AppOpenAdManager(application: Application, private val adUnit: String) :
         }
 
         val diff = ChronoUnit.MINUTES.between(lastTimeDisplay, LocalDateTime.now())
-        if (diff < 10) {
+        if (diff < 3) {
             lastTimeDisplay = LocalDateTime.now()
             return
         }
@@ -143,7 +140,6 @@ class AppOpenAdManager(application: Application, private val adUnit: String) :
                 // Set the reference to null so isAdAvailable() returns false.
                 appOpenAd = null
                 isShowingAd = false
-                Log.d("test", "onAdDismissedFullScreenContent.")
 
                 onShowAdCompleteListener.onShowAdComplete()
                 loadAd(activity)
@@ -159,7 +155,6 @@ class AppOpenAdManager(application: Application, private val adUnit: String) :
 
             /** Called when fullscreen content is shown. */
             override fun onAdShowedFullScreenContent() {
-                Log.d("test", "onAdShowedFullScreenContent.")
             }
         }
         isShowingAd = true
