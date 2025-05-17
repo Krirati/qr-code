@@ -7,7 +7,7 @@
     <string name="favorite">Favorite</string>
     <string name="open_link">OPEN LINK</string>
     <string name="toast_copy_success">Copy success !</string>
-    <string name="generate_qr_code">Generate QR Code</string>
+    <string name="generate_qr_code">Create your QR Code</string>
     <string name="navigate_back">Navigate back</string>
     <string name="input_link_or_data">Input link or data</string>
     <string name="confirm">CONFIRM</string>

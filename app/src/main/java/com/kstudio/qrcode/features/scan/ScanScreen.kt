@@ -36,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,6 +54,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -72,7 +74,7 @@ import com.kstudio.qrcode.features.scan.model.ScanImageState
 import com.kstudio.qrcode.features.scan.model.UiState
 import com.kstudio.qrcode.ui.component.bottomsheet.LinkDetailBottomSheet
 import com.kstudio.qrcode.ui.component.bottomsheet.model.BottomSheetData
-import com.kstudio.qrcode.ui.component.button.buttonColors
+import com.kstudio.qrcode.ui.component.button.iconButtonColors
 import com.kstudio.qrcode.ui.theme.QrCodeTheme
 import org.koin.androidx.compose.koinViewModel
 import java.util.concurrent.Executor
@@ -201,6 +203,7 @@ fun CameraPreview(
     launcherGallery: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>,
 ) {
     val context = LocalContext.current
+    val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
     val previewView: PreviewView = remember { PreviewView(context) }
     val executor = rememberMainExecutor(context)
     val scanner = rememberScanner()
@@ -220,6 +223,19 @@ fun CameraPreview(
     DisposableEffect(Unit) {
         onDispose {
             cameraController.unbind()
+        }
+    }
+
+    LaunchedEffect(lifecycleState) {
+        when (lifecycleState) {
+            Lifecycle.State.DESTROYED -> {
+                isFlashOn = false
+                cameraController.unbind()
+            }
+            Lifecycle.State.RESUMED -> {
+                isFlashOn = false
+            }
+            else -> {}
         }
     }
 
@@ -312,7 +328,7 @@ private fun TopOptionSection(
     ) {
         FilledIconButton(
             onClick = onClickFlash::invoke,
-            colors = buttonColors()
+            colors = iconButtonColors()
         ) {
             Image(
                 painter = painterResource(if (isFlashOn) R.drawable.ic_zap else R.drawable.ic_zap_off),
@@ -344,7 +360,7 @@ private fun BottomNavigation(
                 )
             },
             modifier = Modifier.size(60.dp),
-            colors = buttonColors()
+            colors = iconButtonColors()
         ) {
             Image(
                 painter = painterResource(R.drawable.ic_image),
@@ -354,7 +370,7 @@ private fun BottomNavigation(
         FilledIconButton(
             onClick = { navController?.navigate(Screen.Generate.name) },
             modifier = Modifier.size(60.dp),
-            colors = buttonColors()
+            colors = iconButtonColors()
         ) {
             Image(
                 painter = painterResource(R.drawable.ic_qr_code),
@@ -364,7 +380,7 @@ private fun BottomNavigation(
         FilledIconButton(
             onClick = { navController?.navigate(Screen.History.name) },
             modifier = Modifier.size(60.dp),
-            colors = buttonColors()
+            colors = iconButtonColors()
         ) {
             Image(
                 painter = painterResource(R.drawable.ic_list),

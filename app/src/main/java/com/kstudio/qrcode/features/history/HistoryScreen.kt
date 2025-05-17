@@ -68,6 +68,7 @@ import com.kstudio.qrcode.features.history.model.HistoryData
 import com.kstudio.qrcode.features.history.model.HistoryUiState
 import com.kstudio.qrcode.ui.component.ad.NativeAdView
 import com.kstudio.qrcode.ui.component.ad.itemsWithAd
+import com.kstudio.qrcode.ui.component.appbar.AppBar
 import com.kstudio.qrcode.ui.component.bottomsheet.LinkDetailBottomSheet
 import com.kstudio.qrcode.ui.component.bottomsheet.model.BottomSheetData
 import com.kstudio.qrcode.ui.component.loading.Loading
@@ -103,21 +104,7 @@ fun HistoryScreen(
         }
     }
     Scaffold(topBar = {
-        TopAppBar(
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background,
-                titleContentColor = MaterialTheme.colorScheme.tertiary,
-            ),
-            title = { Text(stringResource(R.string.history_of_scan)) },
-            navigationIcon = {
-                IconButton(onClick = { navController?.popBackStack() }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Localized description"
-                    )
-                }
-            }
-        )
+        AppBar(navController, R.string.history_of_scan)
     }) { paddingValues ->
         when (val state = historyUiState.value) {
             HistoryUiState.Empty -> {
