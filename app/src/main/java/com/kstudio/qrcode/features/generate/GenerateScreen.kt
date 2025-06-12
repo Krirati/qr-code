@@ -19,9 +19,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -36,7 +37,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,7 +52,6 @@ import com.kstudio.qrcode.R
 import com.kstudio.qrcode.ui.component.appbar.AppBar
 import com.kstudio.qrcode.ui.component.button.buttonColors
 import com.kstudio.qrcode.ui.component.button.iconButtonColors
-import com.kstudio.qrcode.ui.theme.GreyLight
 import com.kstudio.qrcode.ui.theme.QrCodeTheme
 import org.koin.androidx.compose.koinViewModel
 import java.io.File
@@ -113,15 +112,32 @@ fun GenerateScreen(
                     placeholder = { Text("Ex. Love QR Code") },
                     modifier = Modifier.fillMaxWidth()
                 )
+                Spacer(Modifier.height(32.dp))
                 Button(
-                    onClick = { viewModel.onConfirmField() },
-                    modifier = Modifier.padding(top = 32.dp),
+                    onClick = {
+                        viewModel.onConfirmField()
+                        openExternalLink(context, viewModel.textFieldLinkData)
+                    },
+                    modifier = Modifier
+                        .height(60.dp)
+                        .fillMaxWidth(),
                     colors = buttonColors()
                 ) {
-                    Text(stringResource(R.string.confirm), color = GreyLight)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            Icons.AutoMirrored.Rounded.Send,
+                            contentDescription = "Open",
+                            colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            stringResource(R.string.open),
+                            style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.onPrimary)
+                        )
+                    }
                 }
                 Row(modifier = Modifier.padding(top = 16.dp)) {
-                    IconButton(
+                    FilledIconButton(
                         enabled = bitmapImage != null,
                         onClick = {
                             viewModel.saveQrResult()
@@ -133,14 +149,22 @@ fun GenerateScreen(
                             ).show()
                         },
                         modifier = Modifier
-                            .size(60.dp)
-                            .padding(),
-                        colors = iconButtonColors().copy(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                            .height(60.dp)
+                            .weight(1f),
+                        colors = iconButtonColors().copy(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
-                        Image(
-                            painter = painterResource(R.drawable.ic_save),
-                            contentDescription = "Save",
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Image(
+                                painter = painterResource(R.drawable.ic_save),
+                                contentDescription = "Save",
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "Save",
+                                style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.onPrimary)
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                     FilledIconButton(
@@ -149,14 +173,23 @@ fun GenerateScreen(
                             context
                         ),
                         enabled = bitmapImage != null,
-                        modifier = Modifier.size(60.dp),
-                        colors = iconButtonColors().copy(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                        modifier = Modifier
+                            .height(60.dp)
+                            .weight(1f),
+                        colors = iconButtonColors().copy(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
-                        Image(
-                            painter = painterResource(R.drawable.ic_share),
-                            contentDescription = stringResource(R.string.share),
-                            colorFilter = ColorFilter.tint(color = colorResource(R.color.white))
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Image(
+                                painter = painterResource(R.drawable.ic_share),
+                                contentDescription = stringResource(R.string.share),
+                                colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimary)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "Share",
+                                style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.onPrimary)
+                            )
+                        }
                     }
                 }
             }
@@ -177,7 +210,7 @@ private fun QrCode(bitmapImage: Bitmap?) {
             modifier = Modifier
                 .size(200.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.outline)
+                .background(MaterialTheme.colorScheme.primary)
         )
     }
 }
@@ -216,6 +249,20 @@ private fun saveBitmapToCache(context: Context, bitmap: Bitmap): Uri? {
     } catch (e: IOException) {
         e.printStackTrace()
         null
+    }
+}
+
+private fun openExternalLink(context: Context, textFieldLinkDat: String?) {
+    val result = runCatching {
+        val intent = Intent().apply {
+            setAction(Intent.ACTION_VIEW)
+            setData(Uri.parse(textFieldLinkDat.toString()))
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+    }
+    result.onFailure {
+        Toast.makeText(context, "This qr code can't open", Toast.LENGTH_SHORT).show()
     }
 }
 

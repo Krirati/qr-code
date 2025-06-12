@@ -8,16 +8,16 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun iconButtonColors() = IconButtonColors(
-    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = .7f),
-    contentColor = MaterialTheme.colorScheme.primary,
-    disabledContentColor = MaterialTheme.colorScheme.primary,
-    disabledContainerColor = MaterialTheme.colorScheme.primaryContainer
+    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = .7f),
+    contentColor = MaterialTheme.colorScheme.onPrimary,
+    disabledContentColor = MaterialTheme.colorScheme.secondary,
+    disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer
 )
 
 @Composable
 fun buttonColors() = ButtonColors(
-    containerColor = MaterialTheme.colorScheme.primaryContainer,
-    contentColor = MaterialTheme.colorScheme.secondary,
-    disabledContentColor = MaterialTheme.colorScheme.primary,
-    disabledContainerColor = MaterialTheme.colorScheme.primaryContainer
+    containerColor = MaterialTheme.colorScheme.primary,
+    contentColor = MaterialTheme.colorScheme.onPrimary,
+    disabledContentColor = MaterialTheme.colorScheme.secondary,
+    disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer
 )

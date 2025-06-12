@@ -10,7 +10,7 @@
     <string name="generate_qr_code">Create your QR Code</string>
     <string name="navigate_back">Navigate back</string>
     <string name="input_link_or_data">Input link or data</string>
-    <string name="confirm">CONFIRM</string>
+    <string name="open">Open</string>
     <string name="toast_save_qr_success">Save Qr Success !!</string>
     <string name="don_t_has_history_of_scan">Don\'t has history of scan</string>
     <string name="history_of_scan">History of scan</string>

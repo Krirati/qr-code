@@ -24,7 +24,7 @@ class AppOpenAdManager(application: Application, private val adUnit: String) :
     Application.ActivityLifecycleCallbacks {
     private var currentActivity: Activity? = null
 
-    private val lifecycleEventObserver = LifecycleEventObserver { source, event ->
+    private val lifecycleEventObserver = LifecycleEventObserver { _, event ->
         if (event == Lifecycle.Event.ON_RESUME) {
             currentActivity?.let { showAdIfAvailable(it) }
         }
@@ -123,7 +123,7 @@ class AppOpenAdManager(application: Application, private val adUnit: String) :
         }
 
         val diff = ChronoUnit.MINUTES.between(lastTimeDisplay, LocalDateTime.now())
-        if (diff < 3) {
+        if (diff < 4) {
             lastTimeDisplay = LocalDateTime.now()
             return
         }

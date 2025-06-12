@@ -21,6 +21,7 @@ playServicesAds = "24.0.0"
 playServicesMlkitBarcodeScanning = "18.3.1"
 roomRuntime = "2.6.1"
 uiGraphics = "1.7.8"
+uiTextGoogleFonts = "1.8.2"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -60,6 +61,7 @@ koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", versi
 koin-test-junit4 = { module = "io.insert-koin:koin-test-junit4", version.ref = "koinAndroidxCompose" }
 play-services-mlkit-barcode-scanning = { module = "com.google.android.gms:play-services-mlkit-barcode-scanning", version.ref = "playServicesMlkitBarcodeScanning" }
 ui-graphics = { module = "androidx.compose.ui:ui-graphics", version.ref = "uiGraphics" }
+androidx-ui-text-google-fonts = { group = "androidx.compose.ui", name = "ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

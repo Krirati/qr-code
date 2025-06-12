@@ -21,10 +21,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -36,8 +34,6 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
@@ -103,9 +99,12 @@ fun HistoryScreen(
             }
         }
     }
-    Scaffold(topBar = {
-        AppBar(navController, R.string.history_of_scan)
-    }) { paddingValues ->
+    Scaffold(
+        topBar = {
+            AppBar(navController, R.string.history_of_scan)
+        },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { paddingValues ->
         when (val state = historyUiState.value) {
             HistoryUiState.Empty -> {
                 HistoryEmpty()
@@ -233,7 +232,7 @@ fun HistoryItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.onPrimary)
                 .padding(16.dp)
 
         ) {
@@ -241,7 +240,7 @@ fun HistoryItem(
                 Text(
                     modifier = Modifier.weight(1f),
                     text = data.title,
-                    style = MaterialTheme.typography.titleMedium.copy(Color.Black)
+                    style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.onPrimaryContainer)
                 )
                 IconButton(onClick = {
                     isFavoriteState = !isFavoriteState
@@ -260,7 +259,7 @@ fun HistoryItem(
             )
             Text(
                 data.createDate,
-                style = MaterialTheme.typography.bodyMedium.copy(Color.LightGray)
+                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onPrimaryContainer)
             )
         }
     }
