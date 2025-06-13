@@ -9,6 +9,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -82,14 +83,15 @@ fun HistoryScreen(
     val navController = LocalNavController.current
     val historyUiState = viewModel.historyState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val showBottomSheet = viewModel.bottomSheetData.collectAsStateWithLifecycle()
     val window = (context as Activity).window
+    val isDarkTheme = isSystemInDarkTheme()
 
     DisposableEffect(Unit) {
         WindowCompat.getInsetsController(window, window.decorView).apply {
             isAppearanceLightNavigationBars = true
-            isAppearanceLightStatusBars = true
+            isAppearanceLightStatusBars = !isDarkTheme
         }
 
         onDispose {
@@ -99,6 +101,7 @@ fun HistoryScreen(
             }
         }
     }
+
     Scaffold(
         topBar = {
             AppBar(navController, R.string.history_of_scan)
@@ -135,6 +138,7 @@ fun HistoryScreen(
         if (showBottomSheet.value != null) {
             val data = showBottomSheet.value ?: return@Scaffold
             LinkDetailBottomSheet(
+                modifier = Modifier.padding(paddingValues),
                 scope = scope,
                 onClose = { viewModel.updateDataBottomSheet(null) },
                 sheetState = sheetState,
@@ -192,6 +196,7 @@ private fun HistoryListItem(
             items = state.data,
             paddingItem = 12.dp,
             key = { item -> item.id },
+            addEvery = 3,
             adItem = { NativeAdView(context) },
             itemContent = { history ->
                 SwipeToDeleteContainer(
@@ -240,7 +245,7 @@ fun HistoryItem(
                 Text(
                     modifier = Modifier.weight(1f),
                     text = data.title,
-                    style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.primary)
                 )
                 IconButton(onClick = {
                     isFavoriteState = !isFavoriteState

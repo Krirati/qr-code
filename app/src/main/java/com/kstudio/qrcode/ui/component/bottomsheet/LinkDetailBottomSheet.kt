@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -36,7 +37,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -55,6 +55,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LinkDetailBottomSheet(
+    modifier: Modifier,
     onClose: () -> Unit,
     onClickFavorite: () -> Unit,
     sheetState: SheetState,
@@ -71,9 +72,10 @@ fun LinkDetailBottomSheet(
     }
 
     ModalBottomSheet(
-        containerColor = Color.White,
+        containerColor = MaterialTheme.colorScheme.background,
         sheetState = sheetState,
         onDismissRequest = onClose,
+        contentWindowInsets = { WindowInsets(bottom = 30.dp) },
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
         Column(
@@ -86,15 +88,15 @@ fun LinkDetailBottomSheet(
             ) {
                 Text(
                     "Scan result",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.headlineMedium.copy(color = MaterialTheme.colorScheme.primary),
                 )
                 IconButton(onClick = handleOnClose(scope, sheetState, onClose)) {
                     Icon(Icons.Default.Clear, contentDescription = "Close modal detail")
                 }
             }
             Text(
-                "Link ${data.link}", style = MaterialTheme.typography.bodyLarge,
+                "Link ${data.link}",
+                style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.primary),
                 fontWeight = FontWeight.Normal
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -117,14 +119,18 @@ fun LinkDetailBottomSheet(
             Button({
                 openExternalLink(data, context)
             }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
-                Text(stringResource(R.string.open_link), Modifier.padding(vertical = 8.dp, horizontal = 16.dp))
+                Text(
+                    stringResource(R.string.open_link),
+                    Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
+                    style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onPrimary)
+                )
             }
         }
     }
 }
 
 private fun openExternalLink(data: BottomSheetData, context: Context) {
-   val result = runCatching {
+    val result = runCatching {
         val intent = Intent().apply {
             setAction(Intent.ACTION_VIEW)
             setData(Uri.parse(data.link))
@@ -145,7 +151,8 @@ private fun copyQrData(
 ): () -> Unit = {
     clipboardManager.setText(AnnotatedString(data.link))
     if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
-        Toast.makeText(context, context.getString(R.string.toast_copy_success), Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, context.getString(R.string.toast_copy_success), Toast.LENGTH_SHORT)
+            .show()
     }
 }
 
@@ -187,7 +194,7 @@ private fun MenuButton(text: String, icon: Int, onClick: () -> Unit) {
         Icon(
             painter = painterResource(icon),
             contentDescription = text,
-            tint = Color.Unspecified
+            tint = MaterialTheme.colorScheme.primary
         )
         Spacer(Modifier.width(24.dp))
         Text(
@@ -208,7 +215,8 @@ private fun LinkDetailBottomSheetPreview() {
             onClickFavorite = {},
             sheetState = sheetState,
             scope = scope,
-            data = BottomSheetData(0, false, "")
+            data = BottomSheetData(0, false, ""),
+            modifier = Modifier
         )
     }
 }

@@ -9,6 +9,7 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -69,6 +70,7 @@ fun GenerateScreen(
     val navController = LocalNavController.current
     val bitmapImage by viewModel.qrBitmap.collectAsStateWithLifecycle(null)
     val storagePermissionState = rememberPermissionState(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    val isDarkTheme = isSystemInDarkTheme()
 
     SideEffect {
         if (!storagePermissionState.status.isGranted) {
@@ -79,7 +81,7 @@ fun GenerateScreen(
     DisposableEffect(Unit) {
         WindowCompat.getInsetsController(window, window.decorView).apply {
             isAppearanceLightNavigationBars = true
-            isAppearanceLightStatusBars = true
+            isAppearanceLightStatusBars = !isDarkTheme
         }
 
         onDispose {

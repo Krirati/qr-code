@@ -87,7 +87,7 @@ fun ScanScreen(
     val context = LocalContext.current
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
     val scope = rememberCoroutineScope()
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val debouncedUiState by remember { derivedStateOf { uiState } }
@@ -117,6 +117,7 @@ fun ScanScreen(
                 if (state is UiState.DisplayBottomSheet) {
                     viewModel.saveScanHistory(state.data)
                     LinkDetailBottomSheet(
+                        modifier = Modifier.padding(paddingValues),
                         scope = scope,
                         onClose = {
                             showBottomSheet = false
