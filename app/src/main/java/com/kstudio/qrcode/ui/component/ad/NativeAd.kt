@@ -48,6 +48,7 @@ import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.android.gms.ads.nativead.NativeAdOptions.ADCHOICES_TOP_RIGHT
 import com.google.android.gms.ads.nativead.NativeAdView
 import com.kstudio.qrcode.R
+import kotlin.math.abs
 
 @Composable
 fun NativeAdView(context: Context, modifier: Modifier = Modifier) {
@@ -187,7 +188,7 @@ private fun AdDescriptionContent(nativeAd: NativeAd?) {
 
 inline fun <T> LazyListScope.itemsWithAd(
     items: List<T>,
-    addEvery: Int = 5,
+    addEvery: Int = 3,
     paddingItem: Dp,
     noinline key: ((item: T) -> Any)? = null,
     crossinline adItem: @Composable LazyItemScope.() -> Unit,
@@ -197,7 +198,7 @@ inline fun <T> LazyListScope.itemsWithAd(
     key = if (key != null) { index: Int -> key(items[index]) } else null
 ) {
     itemContent(items[it])
-    if (it % addEvery == 0 && it != 0) {
+    if (abs(it -1) % addEvery == 0 && it != 0) {
         Spacer(Modifier.height(paddingItem))
         adItem()
     }
